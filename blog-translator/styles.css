@@ -65,8 +65,25 @@ header {
 h1 {
   font-size: 28px;
   font-weight: 700;
-  margin: 16px 0 12px;
+  margin: 16px 0 6px;
   letter-spacing: -0.5px;
+}
+
+.byline {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--accent-muted);
+}
+
+.byline a {
+  color: var(--accent-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.byline a:hover {
+  color: var(--text-color);
+  border-bottom-color: var(--text-color);
 }
 
 .lede {
