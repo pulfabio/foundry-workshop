@@ -31,13 +31,13 @@
           <span class="status ready">Ready</span>
           <span class="name">Mac (Apple Silicon)</span>
           <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/Blog-Translator-mac-arm64.zip">Download zip</a>
-          <p class="note">v0.1.0 · Native arm64 · ~86&nbsp;MB</p>
+          <p class="note">v0.1.0 · Native arm64 · ~86&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-arm64.zip" hidden></span></p>
         </li>
         <li>
           <span class="status ready">Ready</span>
           <span class="name">Mac (Intel)</span>
           <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/Blog-Translator-mac-x64.zip">Download zip</a>
-          <p class="note">v0.1.0 · Rosetta OK on Apple Silicon · ~92&nbsp;MB</p>
+          <p class="note">v0.1.0 · Rosetta OK on Apple Silicon · ~92&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-x64.zip" hidden></span></p>
         </li>
         <li>
           <span class="status soon">Later</span>
@@ -79,5 +79,67 @@
 
     <p class="copyright">© 2026 Fabio Pulito</p>
   </div>
+
+  <script>
+  (function () {
+    var API = "https://api.github.com/repos/pulfabio/blog-translator-downloads/releases/tags/v0.1.0";
+    var CACHE_KEY = "bt-dl-counts-v0.1.0";
+    var CACHE_MS = 60 * 60 * 1000;
+    var nodes = document.querySelectorAll(".dl-count[data-asset]");
+    if (!nodes.length) return;
+
+    function label(n) {
+      return n === 1 ? "1 download" : n + " downloads";
+    }
+
+    function apply(counts) {
+      nodes.forEach(function (el) {
+        var name = el.getAttribute("data-asset");
+        if (!counts || typeof counts[name] !== "number") return;
+        el.textContent = " · " + label(counts[name]);
+        el.hidden = false;
+      });
+    }
+
+    function fromCache() {
+      try {
+        var raw = sessionStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !parsed.at || Date.now() - parsed.at > CACHE_MS) return null;
+        return parsed.counts;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function toCache(counts) {
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), counts: counts }));
+      } catch (e) { /* ignore */ }
+    }
+
+    var cached = fromCache();
+    if (cached) {
+      apply(cached);
+      return;
+    }
+
+    fetch(API, { headers: { Accept: "application/vnd.github+json" } })
+      .then(function (r) {
+        if (!r.ok) throw new Error("api " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var counts = {};
+        (data.assets || []).forEach(function (a) {
+          if (a && a.name) counts[a.name] = a.download_count || 0;
+        });
+        toCache(counts);
+        apply(counts);
+      })
+      .catch(function () { /* leave rows unchanged */ });
+  })();
+  </script>
 </body>
 </html>
