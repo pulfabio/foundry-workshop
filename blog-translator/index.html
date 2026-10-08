@@ -42,20 +42,20 @@
         <li>
           <span class="status ready">Ready</span>
           <span class="name">Mac (Apple Silicon)</span>
-          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/Blog-Translator-mac-arm64.zip">Download zip</a>
-          <p class="note">v0.1.0 · Native arm64 · ~86&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-arm64.zip" hidden></span></p>
+          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.2.0/Blog-Translator-mac-arm64.zip">Download zip</a>
+          <p class="note">v0.2.0 · Native arm64 · ~86&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-arm64.zip" hidden></span></p>
         </li>
         <li>
           <span class="status ready">Ready</span>
           <span class="name">Mac (Intel)</span>
-          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/Blog-Translator-mac-x64.zip">Download zip</a>
-          <p class="note">v0.1.0 · Rosetta OK on Apple Silicon · ~92&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-x64.zip" hidden></span></p>
+          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.2.0/Blog-Translator-mac-x64.zip">Download zip</a>
+          <p class="note">v0.2.0 · Rosetta OK on Apple Silicon · ~92&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-mac-x64.zip" hidden></span></p>
         </li>
         <li>
           <span class="status ready">Ready</span>
           <span class="name">Windows (x64)</span>
-          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/Blog-Translator-win-x64.zip">Download zip</a>
-          <p class="note">v0.1.0 · Portable · unsigned · ~70&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-win-x64.zip" hidden></span></p>
+          <a class="link" href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.2.0/Blog-Translator-win-x64.zip">Download zip</a>
+          <p class="note">v0.2.0 · Portable · unsigned · ~70&nbsp;MB<span class="dl-count" data-asset="Blog-Translator-win-x64.zip" hidden></span></p>
         </li>
         <li>
           <span class="status soon">Later</span>
@@ -76,9 +76,9 @@
       </ol>
       <p class="muted">
         Unsigned on purpose for now (no Apple notarization / no Windows code signing). Gatekeeper and SmartScreen prompts are normal.
-        <a href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/First-Open-Mac.txt">Mac notes</a>
+        <a href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.2.0/First-Open-Mac.txt">Mac notes</a>
         ·
-        <a href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.1.0/First-Open-Windows.txt">Windows notes</a>
+        <a href="https://github.com/pulfabio/blog-translator-downloads/releases/download/v0.2.0/First-Open-Windows.txt">Windows notes</a>
       </p>
     </section>
 
@@ -97,8 +97,12 @@
 
   <script>
   (function () {
-    var API = "https://api.github.com/repos/pulfabio/blog-translator-downloads/releases/tags/v0.1.0";
-    var CACHE_KEY = "bt-dl-counts-v0.1.0";
+    // Sum download_count for the same asset name across every release tag,
+    // so totals survive version bumps (v0.1.0 + v0.2.0 + …).
+    // Note: GitHub still resets a single asset to 0 if you --clobber it on the
+    // same tag — always ship a new tag instead of replacing in place.
+    var API = "https://api.github.com/repos/pulfabio/blog-translator-downloads/releases?per_page=100";
+    var CACHE_KEY = "bt-dl-counts-all";
     var CACHE_MS = 60 * 60 * 1000;
     var nodes = document.querySelectorAll(".dl-count[data-asset]");
     if (!nodes.length) return;
@@ -134,6 +138,17 @@
       } catch (e) { /* ignore */ }
     }
 
+    function sumCounts(releases) {
+      var counts = {};
+      (releases || []).forEach(function (rel) {
+        (rel.assets || []).forEach(function (a) {
+          if (!a || !a.name) return;
+          counts[a.name] = (counts[a.name] || 0) + (a.download_count || 0);
+        });
+      });
+      return counts;
+    }
+
     var cached = fromCache();
     if (cached) {
       apply(cached);
@@ -146,10 +161,7 @@
         return r.json();
       })
       .then(function (data) {
-        var counts = {};
-        (data.assets || []).forEach(function (a) {
-          if (a && a.name) counts[a.name] = a.download_count || 0;
-        });
+        var counts = sumCounts(data);
         toCache(counts);
         apply(counts);
       })
